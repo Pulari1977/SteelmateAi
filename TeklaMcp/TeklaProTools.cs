@@ -25,7 +25,7 @@ public static class TeklaProTools
 		}
 		catch (Exception ex)
 		{
-			return "Error: " + ex.Message;
+			return TeklaSession.Fail(ex);
 		}
 	}
 

@@ -166,7 +166,8 @@ public static class TeklaLocator
 		}
 		foreach (string root in roots)
 		{
-			string tekla = Path.Combine(root, "Tekla Structures");
+			foreach (string tekla in new[] { Path.Combine(root, "Tekla Structures"), Path.Combine(root, "TeklaStructures") })
+			{
 			if (!Directory.Exists(tekla))
 			{
 				continue;
@@ -178,6 +179,7 @@ public static class TeklaLocator
 				{
 					found.Add(Tuple.Create(v, bin));
 				}
+			}
 			}
 		}
 		return found.OrderByDescending(t => t.Item1).Select(t => t.Item2).FirstOrDefault();

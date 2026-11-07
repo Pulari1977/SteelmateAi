@@ -1,3 +1,4 @@
+using System.Reflection;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -38,8 +39,27 @@ public static class TeklaSession
 		}
 	}
 
+	/// <summary>Logs the whole error to mcp.log and returns a short message for the AI.</summary>
+	public static string Fail(Exception ex)
+	{
+		Exception inner = ex;
+		while ((inner is TargetInvocationException || inner is TypeInitializationException || inner is AggregateException) && inner.InnerException != null)
+		{
+			inner = inner.InnerException;
+		}
+		string full = ex.ToString();
+		Log("ERROR " + (full.Length > 3000 ? full.Substring(0, 3000) : full));
+		string msg = "Error: " + inner.Message;
+		if (inner is FileNotFoundException || inner is FileLoadException || inner is BadImageFormatException || inner is TypeLoadException || inner is MissingMethodException)
+		{
+			msg += "\nThe Tekla API files could not be used. " + TeklaLocator.Describe() + " Details are in %LOCALAPPDATA%\\SteelMateAI\\mcp.log.";
+		}
+		return msg;
+	}
+
 	public static T Run<T>(Func<Model, T> action, [CallerMemberName] string caller = "")
 	{
+		Log("CALL  " + caller);
 		lock (Gate)
 		{
 			bool flag = false;
@@ -60,7 +80,9 @@ public static class TeklaSession
 				Log("START " + caller);
 				if (_model == null || !_model.GetConnectionStatus())
 				{
+					Log("Connecting to Tekla. " + TeklaLocator.Describe());
 					_model = new Model();
+					Log("Connected: " + _model.GetConnectionStatus());
 				}
 				if (!_model.GetConnectionStatus())
 				{

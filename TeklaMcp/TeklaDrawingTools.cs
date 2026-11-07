@@ -132,7 +132,7 @@ public static class TeklaDrawingTools
 		}
 		catch (Exception ex)
 		{
-			return "Error: " + ex.Message;
+			return TeklaSession.Fail(ex);
 		}
 	}
 

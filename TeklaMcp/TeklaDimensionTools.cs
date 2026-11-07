@@ -214,7 +214,7 @@ public static class TeklaDimensionTools
 		}
 		catch (Exception ex)
 		{
-			return "Error: " + ex.Message;
+			return TeklaSession.Fail(ex);
 		}
 	}
 }

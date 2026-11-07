@@ -1,6 +1,11 @@
 SteelMate AI - version history
 ==============================
 
+1.9.1  (2026-11-07)
+- Finds Tekla installed in C:\TeklaStructures\<version> (no space) even when Tekla is closed.
+- Much more detail in mcp.log: every Tekla call, the connection attempt, and full errors.
+- Errors about Tekla files now say which Tekla folder was used.
+
 1.9.0  (2026-11-07)
 - New: "Connect to Claude Desktop" button (Settings). Use your Claude Pro/Max plan with no API key:
   it adds SteelMate's Tekla tools to the Claude desktop app, and you chat there.

@@ -21,7 +21,7 @@ public static class TeklaQaTools
 		}
 		catch (Exception ex)
 		{
-			return "Error: " + ex.Message;
+			return TeklaSession.Fail(ex);
 		}
 	}
 

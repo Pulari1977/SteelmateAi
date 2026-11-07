@@ -167,7 +167,7 @@ public static class TeklaFixTools
 		}
 		catch (Exception ex)
 		{
-			return "Error: " + ex.Message;
+			return TeklaSession.Fail(ex);
 		}
 	}
 

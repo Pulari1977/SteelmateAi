@@ -66,7 +66,7 @@ public static class TeklaRevisionTools
 		}
 		catch (Exception ex)
 		{
-			return "Error: " + ex.Message;
+			return TeklaSession.Fail(ex);
 		}
 	}
 

@@ -49,6 +49,8 @@ internal static class Program
 
 	private static async Task RunMcpServerAsync()
 	{
+		TeklaMcp.TeklaSession.Log("Tool server started (SteelMate AI " + Application.ProductVersion + ")");
+		AppDomain.CurrentDomain.UnhandledException += (s, e) => TeklaMcp.TeklaSession.Log("CRASH " + e.ExceptionObject);
 		HostApplicationBuilder hostApplicationBuilder = Host.CreateApplicationBuilder(Array.Empty<string>());
 		hostApplicationBuilder.Logging.ClearProviders();
 		IMcpServerBuilder builder = hostApplicationBuilder.Services.AddMcpServer().WithStdioServerTransport().WithToolsFromAssembly();

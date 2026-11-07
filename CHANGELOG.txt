@@ -1,0 +1,14 @@
+SteelMate AI - version history
+==============================
+
+1.6.0  (2026-11-07)
+- New: Setup.exe installer and uninstaller (Windows "Apps" list shows the version).
+- Claude is the default AI (claude-sonnet-5-5). Old settings are moved to Claude once.
+- Chat works even when Tekla is not connected (before, the app refused to call the AI).
+- "Save and reconnect" tests the API key straight away and reports the result.
+- AI errors explained in plain words: wrong key, no credit, wrong model, blocked network, busy.
+- Pasted API keys are cleaned (spaces, quotes, line breaks).
+- Missing Tekla helper files are loaded from the installed Tekla Structures bin folder.
+
+1.5.2  (2026-11-06)
+- Your original build (from D:\SteelMateAi). AI calls were blocked when Tekla was not connected.

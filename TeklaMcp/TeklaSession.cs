@@ -64,7 +64,7 @@ public static class TeklaSession
 				}
 				if (!_model.GetConnectionStatus())
 				{
-					throw new InvalidOperationException("Not connected to Tekla Structures. Make sure Tekla is running with a model open, and that TeklaVersion in SteelMateAI.csproj matches your installed Tekla version.");
+					throw new InvalidOperationException("Not connected to Tekla Structures. Make sure Tekla is running with a model open. " + TeklaLocator.Describe() + " If you opened a different Tekla version after starting SteelMate AI, press Reconnect on the Tools tab.");
 				}
 				WorkPlaneHandler workPlaneHandler = _model.GetWorkPlaneHandler();
 				TransformationPlane currentTransformationPlane = workPlaneHandler.GetCurrentTransformationPlane();

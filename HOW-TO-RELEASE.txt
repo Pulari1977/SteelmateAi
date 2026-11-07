@@ -1,6 +1,6 @@
 How to make a new version
 1. Change the version in Properties/AssemblyInfo.cs and in installer/setup.nsi (!define VER).
 2. Add a section at the top of CHANGELOG.txt.
-3. dotnet build -c Release -o installer/app   (plus copy ui, agents, tools, runtimes, WebView2Loader.dll into installer/app)
+3. dotnet build -c Release -o installer/app   (plus copy ui, agents, tools, runtimes, WebView2Loader.dll into installer/app; do NOT copy any Tekla*.dll)
 4. makensis installer/setup.nsi   -> SteelMateAI-Setup-<version>.exe
 5. git commit, then: git tag v<version>

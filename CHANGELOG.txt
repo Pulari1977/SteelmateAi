@@ -1,6 +1,15 @@
 SteelMate AI - version history
 ==============================
 
+1.7.0  (2026-11-07)
+- Works with Tekla Structures 2025 and 2026 automatically. No separate build per version.
+  SteelMate AI uses the Tekla that is running; if none is running, the newest installed (2025 or newer).
+  If you switch Tekla version while SteelMate AI is open, press Reconnect on the Tools tab.
+- The Tekla API files are no longer shipped with the app. They are loaded from your Tekla installation.
+- IFC export now writes IFC4 (the same call works in 2025 and 2026; IFC2x3 export is gone in 2025).
+- The "not connected" message now says which Tekla version and folder are in use.
+- The installer warns if Tekla 2025/2026 is not found, and removes old pinned Tekla files on update.
+
 1.6.0  (2026-11-07)
 - New: Setup.exe installer and uninstaller (Windows "Apps" list shows the version).
 - Claude is the default AI (claude-sonnet-5-5). Old settings are moved to Claude once.

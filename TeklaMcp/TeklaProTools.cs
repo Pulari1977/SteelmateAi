@@ -96,7 +96,7 @@ public static class TeklaProTools
 	}
 
 	[McpServerTool(Name = "tekla_export_ifc")]
-	[Description("Export the model (or current selection) to an IFC2x3 file for BIM coordination with other disciplines.")]
+	[Description("Export the model (or current selection) to an IFC4 file for BIM coordination with other disciplines.")]
 	public static string ExportIfc([Description("Full output path including .ifc, e.g. C:\\Exports\\model.ifc")] string filePath, [Description("true = only the selected objects")] bool selectedOnly = false)
 	{
 		return Safe(() => TeklaSession.Run(delegate
@@ -106,12 +106,15 @@ public static class TeklaProTools
 			{
 				Directory.CreateDirectory(directoryName);
 			}
-			Operation.IFC2x3ExportFlags iFC2x3ExportFlags = default(Operation.IFC2x3ExportFlags);
-			iFC2x3ExportFlags.ExportLocationsFromOrganizer = true;
-			iFC2x3ExportFlags.IsPoursEnabled = true;
-			iFC2x3ExportFlags.ExportAllObjects = !selectedOnly;
-			Operation.IFC2x3ExportFlags flags = iFC2x3ExportFlags;
-			return (!Operation.CreateIFC2x3Export(filePath, Operation.IFC2x3ExportViewTypeEnum.COORDINATION_VIEW_20, new List<string>(), "", Operation.ExportBasePoint.GLOBAL, layersNamesAsPartNames: false, useViewColors: false, flags, "")) ? "Error: IFC export failed. See Tekla's session log for details." : ("IFC exported to " + filePath);
+			// IFC4 export: the same call exists in Tekla 2025 and 2026 (IFC2x3 export was dropped in 2025).
+			Operation.IFCExportFlags flags = default(Operation.IFCExportFlags);
+			flags.IsLocationFromOrganizer = true;
+			flags.IsPoursEnabled = true;
+			List<string> psets = new List<string>();
+			bool ok = selectedOnly
+				? Operation.CreateIFC4ExportFromSelected(filePath, Operation.IFCExportViewTypeEnum.REFERENCE_VIEW, psets, Operation.ExportBasePoint.GLOBAL, "__Name__", "ByObjectClass", flags, "")
+				: Operation.CreateIFC4ExportFromAll(filePath, Operation.IFCExportViewTypeEnum.REFERENCE_VIEW, psets, Operation.ExportBasePoint.GLOBAL, "__Name__", "ByObjectClass", flags, "");
+			return ok ? ("IFC4 exported to " + filePath) : "Error: IFC export failed. See Tekla's session log for details.";
 		}, "ExportIfc"));
 	}
 

@@ -2,9 +2,11 @@
 
 A chat window for Tekla Structures. You type what you want, and Claude does it in Tekla using about 58 tools: create and modify parts, check numbering, find clashes, make drawings, and export NC, IFC and reports. It asks before it changes your model.
 
-## Latest version: 1.6.0 (2026-11-07)
+## Latest version: 1.7.0 (2026-11-07)
 
-**Download:** [releases/1.6.0/SteelMateAI-Setup-1.6.0.exe](releases/1.6.0/SteelMateAI-Setup-1.6.0.exe). Click the file, then **Download raw file**.
+Works with **Tekla Structures 2025 and 2026**. It uses whichever Tekla is running.
+
+**Download:** [releases/1.7.0/SteelMateAI-Setup-1.7.0.exe](releases/1.7.0/SteelMateAI-Setup-1.7.0.exe). Click the file, then **Download raw file**.
 
 What changed in each version: [CHANGELOG.txt](CHANGELOG.txt)
 
@@ -20,4 +22,6 @@ Use Windows **Settings → Apps → SteelMate AI → Uninstall**. It asks whethe
 Run the newer Setup file. It keeps your settings and the tools you built.
 
 ## Build from source
-See [HOW-TO-RELEASE.txt](HOW-TO-RELEASE.txt). The Tekla version is set in `SteelMateAI.csproj` (`TeklaVersion`).
+See [HOW-TO-RELEASE.txt](HOW-TO-RELEASE.txt). The code is compiled against Tekla 2025 (`TeklaVersion` in `SteelMateAI.csproj`). At run time `TeklaMcp/TeklaLocator.cs` loads the Tekla API files from the running or newest installed Tekla, so one build serves 2025 and 2026.
+
+Older installers are kept in `releases/<version>/`.

@@ -41,73 +41,10 @@ internal static class Program
 		return 0;
 	}
 
-	/// <summary>
-	/// The Tekla API files need helper files (Trimble.Remoting, Tekla.Common.Geometry, ...).
-	/// If one is not next to SteelMateAI.exe, load it from the installed Tekla Structures bin folder.
-	/// </summary>
+	/// <summary>Loads the Tekla API files from the Tekla version that is running (2025, 2026, ...).</summary>
 	private static Assembly ResolveFromTekla(object sender, ResolveEventArgs e)
 	{
-		try
-		{
-			string file = new AssemblyName(e.Name).Name + ".dll";
-			string local = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, file);
-			if (File.Exists(local))
-			{
-				return Assembly.LoadFrom(local);
-			}
-			foreach (string bin in TeklaBinFolders())
-			{
-				string path = Path.Combine(bin, file);
-				if (File.Exists(path))
-				{
-					return Assembly.LoadFrom(path);
-				}
-			}
-		}
-		catch
-		{
-		}
-		return null;
-	}
-
-	private static string[] _teklaBins;
-
-	private static string[] TeklaBinFolders()
-	{
-		if (_teklaBins != null)
-		{
-			return _teklaBins;
-		}
-		var list = new System.Collections.Generic.List<string>();
-		string wanted = typeof(Program).Assembly.GetReferencedAssemblies()
-			.Where(a => a.Name == "Tekla.Structures.Model").Select(a => a.Version.Major.ToString()).FirstOrDefault() ?? "";
-		foreach (string root in new[]
-		{
-			Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
-			Environment.GetEnvironmentVariable("ProgramW6432") ?? "",
-			@"C:\Program Files",
-			@"D:\Program Files"
-		}.Where(r => !string.IsNullOrEmpty(r)).Distinct(StringComparer.OrdinalIgnoreCase))
-		{
-			string tekla = Path.Combine(root, "Tekla Structures");
-			if (!Directory.Exists(tekla))
-			{
-				continue;
-			}
-			// Prefer the Tekla version this program was built for, then newest first.
-			foreach (string ver in Directory.GetDirectories(tekla)
-				.OrderByDescending(d => Path.GetFileName(d).StartsWith(wanted) ? 1 : 0)
-				.ThenByDescending(d => Path.GetFileName(d), StringComparer.OrdinalIgnoreCase))
-			{
-				string bin = Path.Combine(ver, "bin");
-				if (Directory.Exists(bin))
-				{
-					list.Add(bin);
-				}
-			}
-		}
-		_teklaBins = list.ToArray();
-		return _teklaBins;
+		return TeklaMcp.TeklaLocator.Resolve(e.Name);
 	}
 
 	private static async Task RunMcpServerAsync()

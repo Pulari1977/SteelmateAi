@@ -193,6 +193,7 @@ public class MainForm : Form
 						type = "welcome"
 					});
 					ConnectAsync();
+					AutoConnectAiAsync(fromSettings: false);
 				}
 				break;
 			case 't':
@@ -339,7 +340,7 @@ public class MainForm : Form
 			if (text == "saveSettings")
 			{
 				SaveSettings(m);
-				await TestAiAsync();
+				await AutoConnectAiAsync(fromSettings: true);
 				await ConnectAsync();
 			}
 			break;
@@ -551,8 +552,8 @@ public class MainForm : Form
 		Post(new
 		{
 			type = "status",
-			text = "Connecting…",
-			state = ""
+			text = Status(null, "connecting…", null),
+			state = StatusState()
 		});
 		try
 		{
@@ -560,8 +561,8 @@ public class MainForm : Form
 			Post(new
 			{
 				type = "status",
-				text = "Connected · " + _mcp.Tools.Count + " tools",
-				state = "on"
+				text = Status(null, _mcp.Tools.Count + " tools", true),
+				state = StatusState()
 			});
 			PostTools();
 		}
@@ -570,38 +571,162 @@ public class MainForm : Form
 			Post(new
 			{
 				type = "status",
-				text = "Not connected",
-				state = "err"
+				text = Status(null, "not connected", false),
+				state = StatusState()
 			});
 			Add("e", "Could not start the Tekla MCP server: " + ex.Message);
 		}
 	}
 
-	private async System.Threading.Tasks.Task TestAiAsync()
+	private string _aiText = "…", _teklaText = "…";
+
+	private bool? _aiOk, _teklaOk;
+
+	/// <summary>One status line for both links, e.g. "Claude: connected · Tekla: 58 tools".</summary>
+	private string Status(string ai, string tekla, bool? teklaOk, bool? aiOk = null)
 	{
-		string provider = _settings.Provider;
-		string key = _settings.GetKey(provider);
-		if (string.IsNullOrWhiteSpace(key))
-		{
-			Add("e", "No API key saved for " + provider + ". Paste it in Settings (the gear), then press Save and reconnect.");
-			return;
-		}
-		string model = (_settings.Models.TryGetValue(provider, out var value) && !string.IsNullOrEmpty(value)) ? value : ModelChoices[provider][0];
-		Post(new
-		{
-			type = "status",
-			text = "Checking " + provider + "…",
-			state = ""
-		});
+		if (ai != null) { _aiText = ai; _aiOk = aiOk; }
+		if (tekla != null) { _teklaText = tekla; _teklaOk = teklaOk; }
+		return _settings.Provider + ": " + _aiText + " · Tekla: " + _teklaText;
+	}
+
+	private string StatusState()
+	{
+		if (_aiOk == true && _teklaOk == true) return "on";
+		if (_aiOk == false) return "err";
+		return _aiOk == true ? "on" : "";
+	}
+
+	private static readonly string[] VendorOrder = { "Claude", "OpenAI", "Gemini" };
+
+	private static readonly Dictionary<string, string[]> EnvKeyNames = new Dictionary<string, string[]>
+	{
+		["Claude"] = new[] { "ANTHROPIC_API_KEY", "CLAUDE_API_KEY" },
+		["OpenAI"] = new[] { "OPENAI_API_KEY" },
+		["Gemini"] = new[] { "GEMINI_API_KEY", "GOOGLE_API_KEY" }
+	};
+
+	/// <summary>
+	/// Connects to the AI with no clicks: picks up keys from Windows environment variables,
+	/// chooses a vendor that has a key (Claude first), checks the key, and refreshes every
+	/// vendor's model list from the vendor itself so new models appear automatically.
+	/// </summary>
+	private async System.Threading.Tasks.Task AutoConnectAiAsync(bool fromSettings)
+	{
 		try
 		{
-			await Provider.PingAsync(provider, key, model);
-			Add("n", provider + " is connected (" + model + ").");
+			// Saved model lists from last time (so dropdowns are current even before the check finishes).
+			foreach (var kv in _settings.ModelLists)
+			{
+				if (ModelChoices.ContainsKey(kv.Key) && kv.Value != null && kv.Value.Count > 0)
+				{
+					ModelChoices[kv.Key] = kv.Value.ToArray();
+				}
+			}
+			bool changed = false;
+			foreach (string v in VendorOrder)
+			{
+				if (!string.IsNullOrEmpty(_settings.GetKey(v)))
+				{
+					continue;
+				}
+				foreach (string env in EnvKeyNames[v])
+				{
+					string k = Environment.GetEnvironmentVariable(env, EnvironmentVariableTarget.User)
+						?? Environment.GetEnvironmentVariable(env, EnvironmentVariableTarget.Machine)
+						?? Environment.GetEnvironmentVariable(env);
+					if (!string.IsNullOrWhiteSpace(k))
+					{
+						_settings.SetKey(v, k);
+						changed = true;
+						Add("n", "Found your " + v + " key in Windows (" + env + ") and saved it.");
+						break;
+					}
+				}
+			}
+			if (!fromSettings && string.IsNullOrEmpty(_settings.GetKey(_settings.Provider)))
+			{
+				string withKey = VendorOrder.FirstOrDefault(v => !string.IsNullOrEmpty(_settings.GetKey(v)));
+				if (withKey != null && withKey != _settings.Provider)
+				{
+					_settings.Provider = withKey;
+					_provider = null;
+					changed = true;
+				}
+			}
+			if (changed)
+			{
+				_settings.Save();
+				PostInit();
+			}
+			string provider = _settings.Provider;
+			string key = _settings.GetKey(provider);
+			if (string.IsNullOrWhiteSpace(key))
+			{
+				Post(new { type = "status", text = Status("no key yet", null, null, false), state = StatusState() });
+				if (fromSettings)
+				{
+					Add("e", "No API key saved for " + provider + ". Paste it in Settings (the gear), then press Save and reconnect.");
+				}
+				return;
+			}
+			Post(new { type = "status", text = Status("connecting…", null, null, null), state = StatusState() });
+			string model = await RefreshModelsAsync(provider, key, true);
+			Add("n", provider + " connected · " + model);
+			Post(new { type = "status", text = Status("connected", null, null, true), state = StatusState() });
+			// Refresh the other vendors' lists quietly when their keys are saved.
+			foreach (string v in VendorOrder.Where(v => v != provider && !string.IsNullOrEmpty(_settings.GetKey(v))))
+			{
+				try
+				{
+					await RefreshModelsAsync(v, _settings.GetKey(v), false);
+				}
+				catch
+				{
+				}
+			}
+			PostInit();
 		}
 		catch (Exception ex)
 		{
-			Add("e", Provider.Explain(provider, ex));
+			Post(new { type = "status", text = Status("not connected", null, null, false), state = StatusState() });
+			Add("e", Provider.Explain(_settings.Provider, ex));
 		}
+	}
+
+	/// <summary>Gets the vendor's current model list, keeps a valid model chosen, and returns it.</summary>
+	private async Task<string> RefreshModelsAsync(string provider, string key, bool repost)
+	{
+		List<string> list = await Provider.ListModelsAsync(provider, key);
+		if (list.Count > 0)
+		{
+			// Put the recommended everyday model first.
+			string best = provider == "Claude"
+				? (list.FirstOrDefault(m => m == "claude-sonnet-5-5") ?? list.FirstOrDefault(m => m.Contains("sonnet")) ?? list[0])
+				: list[0];
+			list.Remove(best);
+			list.Insert(0, best);
+			ModelChoices[provider] = list.ToArray();
+			_settings.ModelLists[provider] = list;
+			if (!_settings.Models.TryGetValue(provider, out string cur) || string.IsNullOrEmpty(cur) || !list.Contains(cur))
+			{
+				if (!string.IsNullOrEmpty(cur))
+				{
+					Add("n", provider + ": model '" + cur + "' is no longer offered, switched to " + best + ".");
+				}
+				_settings.Models[provider] = best;
+				if (provider == _settings.Provider && _provider != null)
+				{
+					_provider.Model = best;
+				}
+			}
+			_settings.Save();
+			if (repost)
+			{
+				PostInit();
+			}
+		}
+		return _settings.Models.TryGetValue(provider, out string m2) && !string.IsNullOrEmpty(m2) ? m2 : ModelChoices[provider][0];
 	}
 
 	private Provider MakeProvider()

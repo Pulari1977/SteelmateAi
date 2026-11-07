@@ -5,8 +5,8 @@ using System.Runtime.Versioning;
 
 [assembly: AssemblyCompany("SteelMateAI")]
 [assembly: AssemblyConfiguration("Release")]
-[assembly: AssemblyFileVersion("1.7.0.0")]
-[assembly: AssemblyInformationalVersion("1.7.0")]
+[assembly: AssemblyFileVersion("1.8.0.0")]
+[assembly: AssemblyInformationalVersion("1.8.0")]
 [assembly: AssemblyProduct("SteelMateAI")]
 [assembly: AssemblyTitle("SteelMateAI")]
-[assembly: AssemblyVersion("1.7.0.0")]
+[assembly: AssemblyVersion("1.8.0.0")]

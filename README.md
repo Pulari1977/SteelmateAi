@@ -2,18 +2,18 @@
 
 A chat window for Tekla Structures. You type what you want, and Claude does it in Tekla using about 58 tools: create and modify parts, check numbering, find clashes, make drawings, and export NC, IFC and reports. It asks before it changes your model.
 
-## Latest version: 1.7.0 (2026-11-07)
+## Latest version: 1.8.0 (2026-11-07)
 
 Works with **Tekla Structures 2025 and 2026**. It uses whichever Tekla is running.
 
-**Download:** [releases/1.7.0/SteelMateAI-Setup-1.7.0.exe](releases/1.7.0/SteelMateAI-Setup-1.7.0.exe). Click the file, then **Download raw file**.
+**Download:** [releases/1.8.0/SteelMateAI-Setup-1.8.0.exe](releases/1.8.0/SteelMateAI-Setup-1.8.0.exe). Click the file, then **Download raw file**.
 
 What changed in each version: [CHANGELOG.txt](CHANGELOG.txt)
 
 ## Install
 1. Run the Setup file. If Windows says "Windows protected your PC", click **More info → Run anyway**. The file is not signed.
 2. No admin rights are needed. It installs to `%LOCALAPPDATA%\Programs\SteelMateAI` and adds Start menu and desktop shortcuts.
-3. Open Tekla with a model, start SteelMate AI, go to **Settings (gear) → Claude**, paste your API key and press **Save and reconnect**.
+3. Start SteelMate AI. The first time, open **Settings (gear) → Claude**, paste your API key and press **Save and reconnect**. After that it connects by itself every time. (If the key is already in the Windows variable `ANTHROPIC_API_KEY`, no setup is needed.)
 
 ## Uninstall
 Use Windows **Settings → Apps → SteelMate AI → Uninstall**. It asks whether to also delete your settings, keys and chat history.

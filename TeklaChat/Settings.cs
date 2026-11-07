@@ -36,6 +36,10 @@ public class Settings
 	public Dictionary<string, string> Keys { get; set; } = new Dictionary<string, string>();
 
 
+	/// <summary>Model lists last fetched from each vendor, so the lists show even when offline.</summary>
+	public Dictionary<string, List<string>> ModelLists { get; set; } = new Dictionary<string, List<string>>();
+
+
 	private static string FilePath
 	{
 		get

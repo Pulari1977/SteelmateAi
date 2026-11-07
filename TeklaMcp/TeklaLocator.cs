@@ -138,7 +138,32 @@ public static class TeklaLocator
 				roots.Add(r);
 			}
 		}
+		// Any fixed drive: X:\Program Files\Tekla Structures and X:\Tekla Structures.
+		try
+		{
+			foreach (DriveInfo d in DriveInfo.GetDrives().Where(d => d.DriveType == DriveType.Fixed && d.IsReady))
+			{
+				foreach (string r in new[] { Path.Combine(d.RootDirectory.FullName, "Program Files"), d.RootDirectory.FullName })
+				{
+					if (!roots.Contains(r, StringComparer.OrdinalIgnoreCase))
+					{
+						roots.Add(r);
+					}
+				}
+			}
+		}
+		catch
+		{
+		}
 		var found = new List<Tuple<Version, string>>();
+		// Installed programs list in Windows (catches custom install folders).
+		foreach (string bin in FromUninstallRegistry())
+		{
+			if (Version.TryParse(VersionFromPath(bin), out Version rv) && rv.Major >= MinVersion && IsUsable(bin))
+			{
+				found.Add(Tuple.Create(rv, bin));
+			}
+		}
 		foreach (string root in roots)
 		{
 			string tekla = Path.Combine(root, "Tekla Structures");
@@ -149,13 +174,64 @@ public static class TeklaLocator
 			foreach (string dir in Directory.GetDirectories(tekla))
 			{
 				string bin = Path.Combine(dir, "bin");
-				if (Version.TryParse(Path.GetFileName(dir), out Version v) && v.Major >= MinVersion && IsUsable(bin))
+				if (Version.TryParse(VersionFromPath(bin), out Version v) && v.Major >= MinVersion && IsUsable(bin))
 				{
 					found.Add(Tuple.Create(v, bin));
 				}
 			}
 		}
 		return found.OrderByDescending(t => t.Item1).Select(t => t.Item2).FirstOrDefault();
+	}
+
+	private static IEnumerable<string> FromUninstallRegistry()
+	{
+		var result = new List<string>();
+		foreach (Microsoft.Win32.RegistryHive hive in new[] { Microsoft.Win32.RegistryHive.LocalMachine, Microsoft.Win32.RegistryHive.CurrentUser })
+		{
+			try
+			{
+				using var baseKey = Microsoft.Win32.RegistryKey.OpenBaseKey(hive, Microsoft.Win32.RegistryView.Registry64);
+				using var un = baseKey.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall");
+				if (un == null)
+				{
+					continue;
+				}
+				foreach (string sub in un.GetSubKeyNames())
+				{
+					using var k = un.OpenSubKey(sub);
+					string name = k?.GetValue("DisplayName") as string ?? "";
+					string loc = k?.GetValue("InstallLocation") as string ?? "";
+					if (name.IndexOf("Tekla Structures", StringComparison.OrdinalIgnoreCase) < 0 || string.IsNullOrWhiteSpace(loc))
+					{
+						continue;
+					}
+					foreach (string bin in new[] { Path.Combine(loc, "bin"), loc })
+					{
+						if (IsUsable(bin))
+						{
+							result.Add(bin);
+						}
+					}
+				}
+			}
+			catch
+			{
+			}
+		}
+		return result;
+	}
+
+	/// <summary>Finds "2025.0" in a path like D:\Apps\Tekla Structures\2025.0\bin.</summary>
+	private static string VersionFromPath(string bin)
+	{
+		foreach (string part in bin.Split('\\', '/').Reverse())
+		{
+			if (part.Length >= 4 && part.StartsWith("20") && Version.TryParse(part.Contains(".") ? part : part + ".0", out _))
+			{
+				return part.Contains(".") ? part : part + ".0";
+			}
+		}
+		return "";
 	}
 
 	private static bool IsUsable(string bin)

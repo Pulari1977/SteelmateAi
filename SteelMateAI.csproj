@@ -15,6 +15,7 @@
     <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
     <!-- Compile against the oldest supported Tekla. At run time the Tekla API files are loaded from the Tekla that is running (see TeklaLocator.cs), so they are not copied next to the exe. -->
     <TeklaVersion>2025.0.0</TeklaVersion>
+    <DefaultItemExcludes>$(DefaultItemExcludes);installer/**;releases/**</DefaultItemExcludes>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />

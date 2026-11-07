@@ -1,6 +1,17 @@
 SteelMate AI - version history
 ==============================
 
+1.8.0  (2026-11-07)
+- Connects to the AI by itself at startup. No need to press anything once a key is saved.
+  - Picks up keys from Windows environment variables (ANTHROPIC_API_KEY, OPENAI_API_KEY, GEMINI_API_KEY).
+  - Uses a vendor that has a key (Claude first) if the chosen one has none.
+- Model lists for Claude, OpenAI and Gemini now come live from each vendor, so new models appear
+  automatically and retired ones disappear. If your chosen model is retired, it switches to a current one.
+- The connection check is free (it reads the model list, no tokens used).
+- Status bar shows both links, e.g. "Claude: connected · Tekla: 58 tools".
+- Finds Tekla 2025/2026 on any drive and in custom folders (Windows installed-programs list).
+- Removed the installer's "Tekla not found" warning (it only checked one folder).
+
 1.7.0  (2026-11-07)
 - Works with Tekla Structures 2025 and 2026 automatically. No separate build per version.
   SteelMate AI uses the Tekla that is running; if none is running, the newest installed (2025 or newer).

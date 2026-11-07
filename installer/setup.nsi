@@ -1,7 +1,7 @@
 ; SteelMate AI installer. Per-user install: no admin rights needed.
 Unicode true
 !define APP "SteelMate AI"
-!define VER "1.7.0"
+!define VER "1.8.0"
 !define EXE "SteelMateAI.exe"
 !define UNKEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\SteelMateAI"
 
@@ -33,14 +33,6 @@ VIAddVersionKey "LegalCopyright" ""
 Function .onInit
   ; Close a running copy so files can be replaced.
   nsExec::Exec 'taskkill /IM ${EXE} /F'
-  ; Warn (but allow) when no Tekla 2025 or newer is installed.
-  StrCpy $1 ""
-  IfFileExists "$PROGRAMFILES64\Tekla Structures\2025.0\bin\Tekla.Structures.Model.dll" 0 +2
-    StrCpy $1 "ok"
-  IfFileExists "$PROGRAMFILES64\Tekla Structures\2026.0\bin\Tekla.Structures.Model.dll" 0 +2
-    StrCpy $1 "ok"
-  StrCmp $1 "ok" +2
-    MessageBox MB_OK|MB_ICONEXCLAMATION "Tekla Structures 2025 or 2026 was not found in $PROGRAMFILES64\Tekla Structures.$\r$\nSteelMate AI can still chat, but Tekla tools need Tekla 2025 or newer installed."
   ReadRegStr $0 HKCU "${UNKEY}" "DisplayVersion"
   StrCmp $0 "" done
   MessageBox MB_OKCANCEL|MB_ICONINFORMATION "${APP} $0 is installed. It will be updated to ${VER}.$\r$\nYour settings, API keys and saved chats are kept." IDOK done

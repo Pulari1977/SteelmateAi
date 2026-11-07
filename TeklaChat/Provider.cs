@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -107,6 +108,82 @@ public abstract class Provider
 				["anthropic-version"] = "2023-06-01"
 			}, cts.Token);
 		}
+	}
+
+	/// <summary>
+	/// Asks the vendor which models this key can use (newest first). Free: no tokens are used.
+	/// Also proves the key works, so it doubles as the connection test.
+	/// </summary>
+	public static async Task<List<string>> ListModelsAsync(string provider, string key)
+	{
+		using CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromSeconds(30.0));
+		List<string> list = new List<string>();
+		if (provider == "Gemini")
+		{
+			JsonNode j = await GetAsync("https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000", new Dictionary<string, string> { ["x-goog-api-key"] = key }, cts.Token);
+			foreach (JsonNode m in (j["models"] as JsonArray) ?? new JsonArray())
+			{
+				string name = ((string?)m["name"] ?? "").Replace("models/", "");
+				bool chat = (m["supportedGenerationMethods"] as JsonArray)?.Any(x => (string?)x == "generateContent") ?? false;
+				string low = name.ToLowerInvariant();
+				if (chat && low.StartsWith("gemini") && !low.Contains("embedding") && !low.Contains("image") && !low.Contains("tts") && !low.Contains("audio") && !low.Contains("live"))
+				{
+					list.Add(name);
+				}
+			}
+			// Newest first: higher version numbers sort later alphabetically, so reverse.
+			list = list.Distinct().OrderByDescending(x => x, StringComparer.OrdinalIgnoreCase).ToList();
+		}
+		else if (provider == "OpenAI")
+		{
+			JsonNode j = await GetAsync("https://api.openai.com/v1/models", new Dictionary<string, string> { ["Authorization"] = "Bearer " + key }, cts.Token);
+			var rows = new List<Tuple<long, string>>();
+			foreach (JsonNode m in (j["data"] as JsonArray) ?? new JsonArray())
+			{
+				string id = (string?)m["id"] ?? "";
+				string low = id.ToLowerInvariant();
+				bool chat = (low.StartsWith("gpt-") || (low.Length > 1 && low[0] == 'o' && char.IsDigit(low[1])))
+					&& !new[] { "audio", "realtime", "transcribe", "tts", "image", "search", "embedding", "instruct", "whisper", "dall-e", "moderation" }.Any(low.Contains);
+				if (chat)
+				{
+					rows.Add(Tuple.Create((long?)m["created"] ?? 0L, id));
+				}
+			}
+			list = rows.OrderByDescending(r => r.Item1).Select(r => r.Item2).ToList();
+		}
+		else
+		{
+			JsonNode j = await GetAsync("https://api.anthropic.com/v1/models?limit=100", new Dictionary<string, string>
+			{
+				["x-api-key"] = key,
+				["anthropic-version"] = "2023-06-01"
+			}, cts.Token);
+			foreach (JsonNode m in (j["data"] as JsonArray) ?? new JsonArray())
+			{
+				string id = (string?)m["id"];
+				if (!string.IsNullOrEmpty(id))
+				{
+					list.Add(id);
+				}
+			}
+		}
+		return list;
+	}
+
+	protected static async Task<JsonNode> GetAsync(string url, Dictionary<string, string> headers, CancellationToken ct)
+	{
+		using HttpRequestMessage req = new HttpRequestMessage(HttpMethod.Get, url);
+		foreach (KeyValuePair<string, string> header in headers)
+		{
+			req.Headers.TryAddWithoutValidation(header.Key, header.Value);
+		}
+		using HttpResponseMessage resp = await Http.SendAsync(req, ct);
+		string text = await resp.Content.ReadAsStringAsync();
+		if (!resp.IsSuccessStatusCode)
+		{
+			throw new Exception("API error " + (int)resp.StatusCode + ": " + text);
+		}
+		return JsonNode.Parse(text);
 	}
 
 	/// <summary>Turns a failed AI call into a plain message that says what to do.</summary>

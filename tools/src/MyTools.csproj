@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <PlatformTarget>x64</PlatformTarget>
+    <AssemblyName>MyTools</AssemblyName>
+    <TeklaVersion>2026.0.0</TeklaVersion>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <!-- This folder sits inside the build output folder (tools\src -> tools), and newer SDKs skip
+         everything under the output folder, which silently builds an empty DLL. List sources explicitly. -->
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="*.cs" />
+    <Reference Include="SteelMateAI">
+      <HintPath>..\..\SteelMateAI.exe</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <PackageReference Include="ModelContextProtocol" Version="1.4.0" ExcludeAssets="runtime" />
+    <PackageReference Include="Tekla.Structures.Model" Version="$(TeklaVersion)" ExcludeAssets="runtime" />
+    <PackageReference Include="Tekla.Structures.Drawing" Version="$(TeklaVersion)" ExcludeAssets="runtime" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+</Project>

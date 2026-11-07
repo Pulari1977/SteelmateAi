@@ -179,6 +179,11 @@ public class MainForm : Form
 		{
 			return;
 		}
+		if (text == "claudeDesktop")
+		{
+			ConnectClaudeDesktop();
+			return;
+		}
 		switch (text.Length)
 		{
 		case 5:
@@ -597,6 +602,76 @@ public class MainForm : Form
 		return _aiOk == true ? "on" : "";
 	}
 
+	/// <summary>
+	/// Registers SteelMateAI.exe --mcp as a tool server in the Claude desktop app, so the user can
+	/// drive Tekla from Claude Desktop with a Claude Pro/Max subscription (no API key).
+	/// </summary>
+	private void ConnectClaudeDesktop()
+	{
+		try
+		{
+			var configs = new List<string>();
+			string roaming = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Claude");
+			if (Directory.Exists(roaming))
+			{
+				configs.Add(Path.Combine(roaming, "claude_desktop_config.json"));
+			}
+			// Microsoft Store install keeps its own copy of the folder.
+			string packages = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Packages");
+			if (Directory.Exists(packages))
+			{
+				foreach (string pkg in Directory.GetDirectories(packages, "Claude_*"))
+				{
+					string dir = Path.Combine(pkg, "LocalCache", "Roaming", "Claude");
+					if (Directory.Exists(dir))
+					{
+						configs.Add(Path.Combine(dir, "claude_desktop_config.json"));
+					}
+				}
+			}
+			if (configs.Count == 0)
+			{
+				Add("e", "The Claude desktop app was not found on this PC. Install it from https://claude.ai/download , sign in once, close it, then press Connect to Claude Desktop again.");
+				return;
+			}
+			foreach (string path in configs)
+			{
+				JsonObject root = null;
+				if (File.Exists(path))
+				{
+					string old = File.ReadAllText(path);
+					File.Copy(path, path + ".steelmate-backup", true);
+					try
+					{
+						root = JsonNode.Parse(string.IsNullOrWhiteSpace(old) ? "{}" : old) as JsonObject;
+					}
+					catch
+					{
+						Add("e", "Could not read " + path + " (it is not valid JSON). Nothing was changed.");
+						continue;
+					}
+				}
+				root = root ?? new JsonObject();
+				if (!(root["mcpServers"] is JsonObject servers))
+				{
+					servers = new JsonObject();
+					root["mcpServers"] = servers;
+				}
+				servers["steelmate-tekla"] = new JsonObject
+				{
+					["command"] = Application.ExecutablePath,
+					["args"] = new JsonArray { "--mcp" }
+				};
+				File.WriteAllText(path, root.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
+			}
+			Add("n", "Done: Claude Desktop now has your Tekla tools (\"steelmate-tekla\").\n1) Fully quit Claude Desktop: right-click its icon near the clock, then Quit.\n2) Open it again and start a new chat.\n3) Open Tekla with a model and ask, e.g. \"Give me a weight take-off of the model\".\nClaude Desktop asks before using each tool the first time.");
+		}
+		catch (Exception ex)
+		{
+			Add("e", "Could not set up Claude Desktop: " + ex.Message);
+		}
+	}
+
 	private static readonly string[] VendorOrder = { "Claude", "OpenAI", "Gemini" };
 
 	private static readonly Dictionary<string, string[]> EnvKeyNames = new Dictionary<string, string[]>
@@ -664,10 +739,7 @@ public class MainForm : Form
 			if (string.IsNullOrWhiteSpace(key))
 			{
 				Post(new { type = "status", text = Status("no key yet", null, null, false), state = StatusState() });
-				if (fromSettings)
-				{
-					Add("e", "No API key saved for " + provider + ". Paste it in Settings (the gear), then press Save and reconnect.");
-				}
+				Add(fromSettings ? "e" : "n", "No API key saved for " + provider + ". Either paste an API key in Settings (the gear), or use your Claude Pro/Max subscription: Settings > Connect to Claude Desktop.");
 				return;
 			}
 			Post(new { type = "status", text = Status("connecting…", null, null, null), state = StatusState() });

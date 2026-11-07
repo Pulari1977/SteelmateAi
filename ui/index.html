@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SteelMate AI</title>
+<style>
+:root{--navy:#14212D;--blue:#1F5A8F;--blue2:#2E78B7;--page:#F3F5F7;--line:#D9DFE5;--ink:#16202A;--mut:#5A6876;--org:#B5470A;--orgbg:#FFF4EB;--orgln:#F0C9A8;--green:#17724A;--red:#B42318}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;font-size:14px;color:var(--ink);background:var(--page);display:flex;flex-direction:column;overflow:hidden}
+button{font:inherit;cursor:pointer}
+.mono{font-family:Consolas,'JetBrains Mono',ui-monospace,monospace}
+/* header */
+header{background:var(--navy);color:#E8EDF2;display:flex;align-items:center;gap:10px;padding:10px 12px;flex:none}
+.logo{width:28px;height:28px;flex:none}
+.hname{font-weight:700;font-size:15px;line-height:1.2}
+.hstat{display:flex;align-items:center;gap:6px;font-size:11.5px;color:#A9B6C3}
+.dot{width:8px;height:8px;border-radius:50%;background:#8A97A4;display:inline-block}
+.dot.on{background:#4CC38A}.dot.err{background:#F0645A}
+.hbtns{margin-left:auto;display:flex;gap:6px}
+.ib{width:40px;height:40px;border:1px solid #2C4156;border-radius:10px;background:transparent;color:#E8EDF2;display:flex;align-items:center;justify-content:center}
+.ib:hover{background:#1c3042}.ib.act{background:#1c3042;border-color:#3B5A78}
+.rec{width:12px;height:12px;border-radius:50%;background:#F0645A;display:inline-block}
+/* tabs */
+.tabs{display:flex;gap:2px;padding:6px 12px 0;background:#fff;border-bottom:1px solid var(--line);flex:none}
+.tab{border:0;background:transparent;padding:0 16px;height:36px;font-weight:600;color:var(--mut);border-bottom:3px solid transparent}
+.tab.on{color:var(--blue);border-bottom-color:var(--blue)}
+.page{flex:1;min-height:0;display:none;flex-direction:column}
+.page.on{display:flex}
+/* chips */
+.chips{display:flex;gap:8px;padding:10px 12px;overflow-x:auto;background:#fff;border-bottom:1px solid var(--line);flex:none}
+.chip{flex:none;min-height:36px;padding:0 14px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink);font-weight:500;font-size:13px}
+.chip:hover{border-color:var(--blue);color:var(--blue)}
+/* messages */
+#msgs{flex:1;min-height:0;overflow-y:auto;padding:14px 12px;display:flex;flex-direction:column;gap:12px}
+.u{align-self:flex-end;max-width:88%;background:var(--blue);color:#fff;border-radius:14px 14px 4px 14px;padding:9px 13px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
+.a{line-height:1.55;white-space:pre-wrap;word-break:break-word}
+.a b{font-weight:700}.a code{font-family:Consolas,monospace;background:#E7ECF1;border-radius:4px;padding:1px 4px;font-size:12.5px}
+.who{font-size:12px;font-weight:600;color:var(--mut);letter-spacing:.03em}
+.note{font-size:12.5px;color:var(--mut);text-align:center;white-space:pre-wrap}
+.err{background:#FDECEA;border:1px solid #F5C2BD;color:var(--red);border-radius:10px;padding:8px 12px;white-space:pre-wrap;word-break:break-word}
+.tool{background:#fff;border:1px solid var(--line);border-radius:10px}
+.tool summary{list-style:none;display:flex;gap:8px;align-items:center;padding:8px 12px;cursor:pointer}
+.tool summary::-webkit-details-marker{display:none}
+.tool .tn{color:var(--org);font-size:12px;font-weight:600}
+.tool .ts{margin-left:auto;font-size:11.5px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:45%}
+.tool pre{margin:0;padding:8px 12px 10px;border-top:1px solid var(--line);font-size:12px;white-space:pre-wrap;word-break:break-word;color:#3A4755;max-height:220px;overflow:auto}
+.tick{width:16px;height:16px;flex:none}
+.spin{width:14px;height:14px;border:2px solid var(--line);border-top-color:var(--blue);border-radius:50%;animation:sp .8s linear infinite;flex:none}
+@keyframes sp{to{transform:rotate(360deg)}}
+.appr{background:var(--orgbg);border:1px solid var(--orgln);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.appr.del{background:#FDECEA;border-color:#F5C2BD}
+.appr .top{display:flex;align-items:center;gap:8px;font-weight:700}
+.badge{margin-left:auto;font-size:11.5px;font-weight:600;color:var(--org);background:#FDE0CC;border-radius:999px;padding:2px 9px}
+.del .badge{color:#fff;background:var(--red)}
+.args{background:#fff;border:1px solid var(--orgln);border-radius:8px;padding:8px 10px;font-size:12px;line-height:1.6;overflow:auto;max-height:180px;white-space:pre-wrap;word-break:break-word}
+.args .tn{color:var(--org);font-weight:700}
+.row{display:flex;gap:8px}
+.btn{flex:1;min-height:40px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--ink);font-weight:600;padding:0 14px}
+.btn.pri{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:700}
+.btn.pri:hover{background:#184a76}
+.btn.dng{background:#fff;color:var(--red);border-color:#F5C2BD}
+.btn:disabled{opacity:.5;cursor:default}
+.btn.sm{flex:none;min-height:34px;font-size:13px}
+.done{opacity:.75}.done .row{display:none}
+/* composer */
+.files{display:flex;flex-wrap:wrap;gap:6px;padding:6px 12px 0;flex:none}
+.files:empty{display:none}
+.fchip{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:3px 6px 3px 10px;font-size:12.5px}
+.fchip button{border:0;background:#E7ECF1;border-radius:50%;width:20px;height:20px;line-height:1;color:var(--mut)}
+.comp{padding:10px 12px 12px;flex:none}
+.box{background:#fff;border:1px solid #BCC6D0;border-radius:12px;padding:8px 10px;display:flex;flex-direction:column;gap:6px}
+.box:focus-within{border-color:var(--blue);box-shadow:0 0 0 3px #1F5A8F22}
+textarea{border:0;outline:0;resize:none;font:inherit;line-height:1.5;color:var(--ink);background:transparent;width:100%;min-height:44px;max-height:140px}
+.cbar{display:flex;align-items:center;gap:8px}
+.tg{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--mut);min-height:36px;cursor:pointer;user-select:none}
+.tg input{width:17px;height:17px;accent-color:var(--blue)}
+.cbar .tg{white-space:nowrap;font-size:12.5px}
+.att{white-space:nowrap;border:1px solid var(--line);background:#fff;border-radius:10px;height:36px;padding:0 10px;font-size:13px;color:var(--ink)}
+.send{margin-left:auto;min-width:78px;height:38px;border:0;border-radius:10px;background:var(--blue);color:#fff;font-weight:700}
+.send.stop{background:#fff;color:var(--red);border:1px solid #F5C2BD}
+.send:disabled{opacity:.5}
+.mbar{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:12.5px;color:var(--mut)}
+.mbar select{flex:1;min-width:0;height:36px;border:1px solid #BCC6D0;border-radius:10px;background:#fff;padding:0 8px;font:inherit;color:var(--ink)}
+.mbar select:focus{outline:0;border-color:var(--blue);box-shadow:0 0 0 3px #1F5A8F22}
+/* lists (tools / history) */
+.bar{display:flex;flex-wrap:wrap;gap:8px;padding:10px 12px;background:#fff;border-bottom:1px solid var(--line);align-items:center;flex:none}
+.in{flex:1 1 140px;min-width:0;height:36px;border:1px solid #BCC6D0;border-radius:10px;padding:0 10px;font:inherit;background:#fff}
+.in:focus{outline:0;border-color:var(--blue);box-shadow:0 0 0 3px #1F5A8F22}
+.cnt{font-size:12px;color:var(--mut)}
+.list{flex:1;min-height:0;overflow-y:auto;padding:8px 12px 14px}
+.grp{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin:14px 2px 6px}
+.item{background:#fff;border:1px solid var(--line);border-radius:10px;margin-bottom:6px;overflow:hidden}
+.item>.h{display:flex;align-items:center;gap:8px;padding:9px 12px;cursor:pointer}
+.item .nm{font-weight:600;font-size:12.5px;word-break:break-all}
+.item .nm.mine{color:var(--org)}
+.pill{margin-left:auto;flex:none;font-size:11px;font-weight:600;border-radius:999px;padding:2px 9px}
+.p-no{background:#E3F4EB;color:var(--green)}.p-yes{background:#FDE0CC;color:var(--org)}.p-al{background:#FDECEA;color:var(--red)}
+.item .d{padding:0 12px 10px;font-size:12.5px;color:#3A4755;line-height:1.5;display:none;white-space:pre-wrap}
+.item.open .d{display:block}
+.item .d pre{margin:8px 0 0;background:#F3F5F7;border-radius:8px;padding:8px;font-size:11.5px;overflow:auto;max-height:160px}
+.sub{font-size:12px;color:var(--mut)}
+.hi .t{font-weight:600;line-height:1.35;word-break:break-word}
+.hi .m{font-size:12px;color:var(--mut);margin-top:2px}
+.hi .acts{display:none;gap:8px;padding:0 12px 10px}
+.hi.open .acts{display:flex}
+.hi .tr{display:none;margin:0 12px 10px;background:var(--page);border-radius:8px;padding:8px 10px;font-size:12.5px;line-height:1.5;max-height:220px;overflow:auto;white-space:pre-wrap}
+.hi.open .tr{display:block}
+.empty{color:var(--mut);text-align:center;padding:30px 10px}
+/* settings drawer */
+#settings{position:absolute;inset:0;background:var(--page);display:none;flex-direction:column;z-index:10}
+#settings.on{display:flex}
+.shead{display:flex;align-items:center;gap:8px;padding:12px;background:#fff;border-bottom:1px solid var(--line);font-weight:700;font-size:15px}
+.sbody{flex:1;overflow-y:auto;padding:14px 12px;display:flex;flex-direction:column;gap:16px}
+.fld label.l{display:block;font-weight:600;margin-bottom:6px}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.seg button{min-height:44px;border:1px solid var(--line);border-radius:10px;background:#fff;font-weight:700}
+.seg button.on{border:2px solid var(--blue);color:var(--blue)}
+.help{font-size:12px;color:var(--mut);margin-top:5px}
+.keyrow{display:flex;gap:8px}
+.sec{background:#fff;border:1px solid var(--line);border-radius:12px;padding:6px 12px}
+.sec .tg{min-height:44px;font-size:14px;color:var(--ink)}
+.sel{height:36px;border:1px solid #BCC6D0;border-radius:10px;background:#fff;padding:0 8px;font:inherit}
+</style></head>
+<body>
+<header>
+  <svg class="logo" viewBox="0 0 32 32" aria-label="SteelMate AI"><rect width="32" height="32" rx="8" fill="#2E78B7"/><path d="M8 9h16M8 23h16M16 9v14" stroke="#fff" stroke-width="2.6" stroke-linecap="square" fill="none"/></svg>
+  <div><div class="hname">SteelMate AI</div><div class="hstat"><span class="dot" id="dot"></span><span id="stat">Starting…</span></div></div>
+  <div class="hbtns">
+    <button class="ib" id="bRec" title="Record to teach Claude" aria-label="Record to teach Claude"><span class="rec"></span></button>
+    <button class="ib" id="bSet" title="Settings" aria-label="Settings"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E8EDF2" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg></button>
+    <button class="ib" id="bMin" title="Minimize" aria-label="Minimize"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M3 8h10" stroke="#E8EDF2" stroke-width="2" stroke-linecap="round"/></svg></button>
+  </div>
+</header>
+<div class="tabs" role="tablist">
+  <button class="tab on" data-t="chat" role="tab">Chat</button>
+  <button class="tab" data-t="tools" role="tab">Tools</button>
+  <button class="tab" data-t="hist" role="tab">History</button>
+</div>
+
+<section class="page on" id="p-chat">
+  <div class="chips" id="chips"></div>
+  <div id="msgs"></div>
+  <div class="files" id="files"></div>
+  <div class="comp"><div class="box">
+    <textarea id="inp" rows="2" placeholder="Tell SteelMate what to do…  (Enter sends, Shift+Enter new line)" aria-label="Message"></textarea>
+    <div class="cbar">
+      <label class="tg"><input type="checkbox" id="ask" checked> Ask first</label>
+      <label class="tg" title="Include my screen: takes ONE screenshot of your screen when you press Send, so Claude can see your Tekla view"><input type="checkbox" id="scr"> 👁 Screen</label>
+      <button class="att" id="bAtt" title="Attach a PDF or image of a drawing">📎 Attach</button>
+      <button class="send" id="bSend">Send</button>
+    </div>
+  </div>
+  <div class="mbar"><label for="agent">Agent</label><select id="agent" aria-label="Choose agent"></select></div>
+  <div class="mbar"><label for="mdl">Model</label><select id="mdl" aria-label="Change model"></select></div>
+  </div>
+  <input type="file" id="fileIn" multiple accept=".pdf,image/png,image/jpeg,image/gif,image/webp" hidden>
+</section>
+
+<section class="page" id="p-tools">
+  <div class="bar">
+    <input class="in" id="tq" placeholder="Search tools…" aria-label="Search tools">
+    <button class="btn sm" id="bFolder">Tools folder</button>
+    <button class="btn sm" id="bBuild">Build mine</button>
+    <button class="btn sm" id="bReload">Reload</button>
+  </div>
+  <div class="cnt" id="tcnt" style="padding:6px 14px 0"></div>
+  <div class="list" id="tlist"></div>
+</section>
+
+<section class="page" id="p-hist">
+  <div class="bar"><button class="btn pri sm" id="bNew">New chat</button><span class="cnt" id="hcnt"></span></div>
+  <div class="list" id="hlist"></div>
+</section>
+
+<div id="settings">
+  <div class="shead"><button class="ib" id="sBack" style="border-color:var(--line);color:var(--ink);width:36px;height:36px" aria-label="Back"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M10 3L5 8l5 5" fill="none" stroke="#16202A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>Settings</div>
+  <div class="sbody">
+    <div class="fld"><label class="l">Which AI?</label><div class="seg" id="seg"></div></div>
+    <div class="fld"><label class="l" for="model">Model</label><select class="in" id="model" style="width:100%"></select><div class="help">Pick a model, or choose "Other model name…" to type any model your key can use.</div></div>
+    <div class="fld"><label class="l" for="key">API key</label>
+      <div class="keyrow"><input class="in" id="key" type="password" autocomplete="off" placeholder="Paste your key"><button class="btn sm" id="bShow">Show</button></div>
+      <div class="help" id="keyhelp">Saved encrypted by Windows, for your account only.</div></div>
+    <div class="sec">
+      <label class="tg"><input type="checkbox" id="sAsk"> Ask before anything changes the model</label>
+      <label class="tg"><input type="checkbox" id="sDock"> Dock beside Tekla</label>
+      <div class="tg" id="sideRow" style="cursor:default">Side <select class="sel" id="sSide"><option>Right</option><option>Left</option></select></div>
+      <label class="tg"><input type="checkbox" id="sFit"> Fit Tekla beside me</label>
+      <div id="ver" class="mono" style="opacity:.6;font-size:11px;margin:6px 0"></div>
+      <label class="tg"><input type="checkbox" id="sAgents"> Show the Agent drop-down (optional helpers). Off = normal chat only</label>
+      <label class="tg"><input type="checkbox" id="sRec"> Enable screen recorder (Teach Claude). Off = never captures your screen</label>
+    </div>
+    <div class="row"><button class="btn pri" id="bConn">Save and reconnect</button></div>
+    <div class="sec">
+      <div class="l">No API key? Use your Claude subscription instead</div>
+      <div class="help">Adds SteelMate's Tekla tools to the Claude desktop app, so you can chat there with your normal Claude Pro or Max plan. No API key needed.</div>
+      <div class="row"><button class="btn" id="bDesk">Connect to Claude Desktop</button></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+var $=function(id){return document.getElementById(id)};
+var post=function(o){try{window.chrome.webview.postMessage(o)}catch(e){console.log('post',o)}};
+var esc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})};
+var busy=false,files=[],models={},provider='Claude',tools=[],hist=[],openCall=null;
+var QUICK=[['Weight take-off','Give me a weight take-off of the whole model, grouped by profile.'],['Numbering','Check whether the numbering is up to date.'],['Export NC','Check the numbering, then export NC files if it is up to date.'],['Drawings','List the drawings in the model.']];
+
+/* ---------- tabs ---------- */
+function tab(t){
+  ['chat','tools','hist'].forEach(function(n){$('p-'+n).classList.toggle('on',n===t)});
+  document.querySelectorAll('.tab').forEach(function(b){b.classList.toggle('on',b.dataset.t===t)});
+  if(t==='tools')post({type:'tools'});
+  if(t==='hist')post({type:'history'});
+}
+document.querySelectorAll('.tab').forEach(function(b){b.onclick=function(){tab(b.dataset.t)}});
+
+/* ---------- chat ---------- */
+var msgs=$('msgs');
+function scroll(){msgs.scrollTop=msgs.scrollHeight}
+function fmt(t){return esc(t).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/`([^`\n]+)`/g,'<code>$1</code>')}
+var TICK='<svg class="tick" viewBox="0 0 18 18"><circle cx="9" cy="9" r="9" fill="#17724A"/><path d="M5 9.2l2.7 2.7L13 6.6" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+function add(kind,text,replay){
+  var d;
+  if(kind==='u'){d=document.createElement('div');d.className='u';d.textContent=text}
+  else if(kind==='a'){d=document.createElement('div');d.innerHTML='<div class="who">Claude</div><div class="a">'+fmt(text)+'</div>'}
+  else if(kind==='t'){
+    d=document.createElement('details');d.className='tool';
+    var i=text.indexOf(' ');var name=i<0?text:text.slice(0,i),args=i<0?'':text.slice(i+1);
+    d.innerHTML='<summary>'+(replay?TICK:'<span class="spin"></span>')+'<span class="tn mono">'+esc(name)+'</span><span class="ts mono"></span></summary><pre class="mono">'+esc(args)+'</pre>';
+    if(!replay)openCall=d;
+  }
+  else if(kind==='r'){
+    var c=openCall; if(replay){var all=msgs.querySelectorAll('details.tool');c=all[all.length-1]}
+    if(c){var sp=c.querySelector('.spin');if(sp)sp.outerHTML=TICK;c.querySelector('.ts').textContent=text.replace(/\s+/g,' ').slice(0,60);
+      var pre=c.querySelector('pre');pre.textContent+='\n\n→ '+text;openCall=null;scroll();return}
+    return;
+  }
+  else if(kind==='e'){d=document.createElement('div');d.className='err';d.textContent=text}
+  else{d=document.createElement('div');d.className='note';d.textContent=text}
+  msgs.appendChild(d);scroll();
+}
+function clearMsgs(){msgs.innerHTML='';openCall=null}
+function welcome(){
+  add('n','Welcome to SteelMate AI.\n1) Open Settings (the gear) and paste your API key.\n2) Open Tekla with a model.\n3) Type what you want, or press a quick action.\nYou can attach a PDF or image of a drawing.');
+}
+function setBusy(b){busy=b;var s=$('bSend');s.textContent=b?'Stop':'Send';s.classList.toggle('stop',b)}
+function sendNow(text){
+  text=(text||'').trim();
+  if(busy)return;
+  if(!text&&!files.length)return;
+  post({type:'send',screen:$('scr').checked,text:text,files:files.map(function(f){return{name:f.name,mime:f.mime,b64:f.b64}})});
+  $('inp').value='';files=[];drawFiles();autosize();
+}
+$('bSend').onclick=function(){busy?post({type:'stop'}):sendNow($('inp').value)};
+$('inp').addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendNow($('inp').value)}});
+function autosize(){var t=$('inp');t.style.height='auto';t.style.height=Math.min(140,t.scrollHeight)+'px'}
+$('inp').addEventListener('input',autosize);
+$('ask').onchange=function(){post({type:'ask',value:$('ask').checked});$('sAsk').checked=$('ask').checked};
+QUICK.forEach(function(q){var b=document.createElement('button');b.className='chip';b.textContent=q[0];b.onclick=function(){sendNow(q[1])};$('chips').appendChild(b)});
+
+/* approval card */
+function approval(m){
+  var d=document.createElement('div');d.className='appr'+(m.destructive?' del':'');
+  d.innerHTML='<div class="top"><svg width="18" height="18" viewBox="0 0 22 22"><path d="M11 2l7.5 2.8v5.6c0 4.4-3.1 7.7-7.5 9.4C6.6 18.1 3.5 14.8 3.5 10.4V4.8z" fill="none" stroke="'+(m.destructive?'#B42318':'#B5470A')+'" stroke-width="1.7" stroke-linejoin="round"/><path d="M11 7.5v4.2M11 14.2v.1" stroke="'+(m.destructive?'#B42318':'#B5470A')+'" stroke-width="1.8" stroke-linecap="round"/></svg><span>'+(m.destructive?'Allow this DELETE?':'Allow this change?')+'</span><span class="badge">'+(m.destructive?'Deletes':'Changes model')+'</span></div>'
+   +'<div class="args mono"><div class="tn">'+esc(m.tool)+'</div>'+esc(m.args)+'</div>'
+   +'<div class="row"><button class="btn pri" data-a="1">Allow</button><button class="btn" data-a="0">Decline</button></div>'
+   +'<div class="sub">Ctrl+Z in Tekla can undo model changes.</div>';
+  d.querySelectorAll('button').forEach(function(b){b.onclick=function(){
+    var ok=b.dataset.a==='1';post({type:'approve',id:m.id,allow:ok});d.classList.add('done');
+    d.querySelector('.sub').textContent=ok?'Allowed.':'Declined.'}});
+  msgs.appendChild(d);scroll();
+}
+
+/* attachments */
+var MAX=20*1024*1024;
+function addFiles(list){
+  Array.prototype.forEach.call(list,function(f){
+    var okType=/^(application\/pdf|image\/(png|jpeg|gif|webp))$/.test(f.type);
+    if(!okType){add('e','Skipped '+f.name+': only PDF, PNG, JPG, GIF and WEBP.');return}
+    var total=files.reduce(function(a,x){return a+x.size},0)+f.size;
+    if(total>MAX){add('e','Skipped '+f.name+': attachments are limited to 20 MB in total.');return}
+    var r=new FileReader();r.onload=function(){var s=String(r.result);files.push({name:f.name,mime:f.type,size:f.size,b64:s.slice(s.indexOf(',')+1)});drawFiles()};r.readAsDataURL(f);
+  });
+}
+function drawFiles(){
+  var h=$('files');h.innerHTML='';
+  files.forEach(function(f,i){var c=document.createElement('div');c.className='fchip';c.innerHTML='<span>📎 '+esc(f.name)+'</span><button aria-label="Remove">×</button>';c.querySelector('button').onclick=function(){files.splice(i,1);drawFiles()};h.appendChild(c)});
+}
+$('bAtt').onclick=function(){$('fileIn').click()};
+$('fileIn').onchange=function(){addFiles(this.files);this.value=''};
+window.addEventListener('dragover',function(e){e.preventDefault()});
+window.addEventListener('drop',function(e){e.preventDefault();if(e.dataTransfer&&e.dataTransfer.files)addFiles(e.dataTransfer.files)});
+window.addEventListener('paste',function(e){var fs=[];
+  var it=e.clipboardData?e.clipboardData.items:[];for(var i=0;i<it.length;i++){if(it[i].kind==='file'){var f=it[i].getAsFile();if(f)fs.push(f)}}if(fs.length)addFiles(fs)});
+
+/* ---------- tools tab ---------- */
+var GROUPS=['Read the model','Change the model','Export','Drawings','Deletes','Your tools','Manage your tools'];
+function drawTools(){
+  var q=$('tq').value.trim().toLowerCase(),box=$('tlist');box.innerHTML='';var shown=0;
+  GROUPS.forEach(function(g){
+    var items=tools.filter(function(t){return t.group===g&&(!q||t.name.toLowerCase().indexOf(q)>=0||(t.desc||'').toLowerCase().indexOf(q)>=0)});
+    if(!items.length)return;
+    var h=document.createElement('div');h.className='grp';h.textContent=g;box.appendChild(h);
+    items.forEach(function(t){shown++;
+      var it=document.createElement('div');it.className='item';
+      var pc=t.ask==='No'?'p-no':t.ask==='Yes'?'p-yes':'p-al';
+      it.innerHTML='<div class="h"><span class="nm mono'+(t.mine?' mine':'')+'">'+esc(t.name)+'</span><span class="pill '+pc+'">'+(t.ask==='No'?'Never asks':t.ask==='Yes'?'Asks first':'Always asks')+'</span></div><div class="d">'+esc(t.desc||'')+'<pre class="mono">'+esc(t.inputs||'(no inputs)')+'</pre></div>';
+      it.querySelector('.h').onclick=function(){it.classList.toggle('open')};
+      box.appendChild(it)});
+  });
+  if(!tools.length)box.innerHTML='<div class="empty">Not connected yet.<br>Open Settings, then press Save and reconnect.</div>';
+  var mine=tools.filter(function(t){return t.mine}).length;
+  $('tcnt').textContent=tools.length?(shown+' of '+tools.length+' tools'+(mine?' · '+mine+' yours (orange)':'')):'';
+}
+$('tq').oninput=drawTools;
+$('bFolder').onclick=function(){post({type:'toolsFolder'})};
+$('bBuild').onclick=function(){post({type:'buildTools'})};
+function drawAgents(m){var s=$('agent');s.innerHTML='';var o=document.createElement('option');o.value='';o.textContent='General assistant (all tools)';s.appendChild(o);
+  (m.list||[]).forEach(function(a){var x=document.createElement('option');x.value=a.id;x.textContent=a.name+' ('+a.mode+')';x.title=a.desc||'';s.appendChild(x)});s.value=m.current||''}
+$('agent').onchange=function(){post({type:'setAgent',id:this.value})};
+$('bReload').onclick=function(){post({type:'reconnect'})};
+
+/* ---------- history tab ---------- */
+function drawHist(){
+  var box=$('hlist');box.innerHTML='';
+  $('hcnt').textContent=hist.length?hist.length+' saved chats':'';
+  if(!hist.length){box.innerHTML='<div class="empty">No saved chats yet.<br>Chats are saved automatically on this PC.</div>';return}
+  hist.forEach(function(h){
+    var d=document.createElement('div');d.className='item hi';
+    d.innerHTML='<div class="h"><div><div class="t">'+esc(h.title)+'</div><div class="m">'+esc(h.when)+' · '+esc(h.model||'')+'</div></div></div><div class="tr">Loading…</div><div class="acts"><button class="btn pri sm" data-a="c">Continue this chat</button><button class="btn dng sm" data-a="d">Delete</button></div>';
+    d.querySelector('.h').onclick=function(){var o=d.classList.toggle('open');if(o)post({type:'historyGet',id:h.id})};
+    d.querySelector('[data-a=c]').onclick=function(){post({type:'continue',id:h.id})};
+    d.querySelector('[data-a=d]').onclick=function(){if(confirm('Delete this saved chat?'))post({type:'delete',id:h.id})};
+    d._id=h.id;box.appendChild(d)});
+}
+$('bNew').onclick=function(){post({type:'newChat'})};
+
+/* ---------- model picker (bottom of chat) ---------- */
+var CUSTOM='__custom__';
+function drawModelPicker(){
+  var sel=$('mdl');sel.innerHTML='';
+  Object.keys(models).forEach(function(p){
+    var g=document.createElement('optgroup');g.label=p;
+    var list=(models[p]||[]).slice();var cur=lastModels[p];
+    if(cur&&list.indexOf(cur)<0)list.unshift(cur);
+    list.forEach(function(m){var o=document.createElement('option');o.value=p+'|'+m;o.textContent=m;g.appendChild(o)});
+    sel.appendChild(g)});
+  var o=document.createElement('option');o.value=CUSTOM;o.textContent='Other model name…';sel.appendChild(o);
+  var cp=provider,cm=lastModels[cp]||(models[cp]||[''])[0];sel.value=cp+'|'+cm;
+}
+$('mdl').onchange=function(){
+  var v=this.value;
+  if(v===CUSTOM){var n=prompt('Type the model name (for '+provider+'):');if(n&&n.trim()){v=provider+'|'+n.trim()}else{drawModelPicker();return}}
+  var i=v.indexOf('|');var p=v.slice(0,i),m=v.slice(i+1);
+  provider=p;lastModels[p]=m;post({type:'setModel',provider:p,model:m});drawModelPicker();drawSeg();loadModels();
+};
+
+/* ---------- settings ---------- */
+function drawSeg(){
+  var s=$('seg');s.innerHTML='';
+  Object.keys(models).forEach(function(p){var b=document.createElement('button');b.textContent=p;b.className=p===provider?'on':'';b.onclick=function(){provider=p;drawSeg();loadModels();$('key').value='';$('keyhelp').textContent='Switching vendor: paste that vendor\'s key if you have not saved one.'};s.appendChild(b)});
+}
+function loadModels(){var s=$('model');s.innerHTML='';var list=(models[provider]||[]).slice();var cur=lastModels[provider]||list[0]||'';
+  if(cur&&list.indexOf(cur)<0)list.unshift(cur);   /* a custom name saved earlier stays selectable */
+  list.forEach(function(m){var o=document.createElement('option');o.value=m;o.textContent=m;s.appendChild(o)});
+  var c=document.createElement('option');c.value=CUSTOM;c.textContent='Other model name…';s.appendChild(c);
+  s.value=cur;s.dataset.prev=cur}
+$('model').onchange=function(){
+  if(this.value!==CUSTOM){this.dataset.prev=this.value;return}
+  var n=prompt('Type the model name (for '+provider+'):');
+  if(n&&n.trim()){n=n.trim();var o=document.createElement('option');o.value=n;o.textContent=n;this.insertBefore(o,this.lastChild);this.value=n;this.dataset.prev=n}
+  else this.value=this.dataset.prev};
+var lastModels={};
+$('bSet').onclick=function(){$('settings').classList.add('on')};
+$('sBack').onclick=function(){$('settings').classList.remove('on')};
+$('bShow').onclick=function(){var k=$('key');k.type=k.type==='password'?'text':'password';this.textContent=k.type==='password'?'Show':'Hide'};
+$('sDock').onchange=function(){$('sideRow').style.opacity=this.checked?1:.5;$('sSide').disabled=!this.checked;$('sFit').disabled=!this.checked};
+$('bConn').onclick=function(){
+  post({type:'saveSettings',provider:provider,model:$('model').value.trim(),key:$('key').value,ask:$('sAsk').checked,dock:$('sDock').checked,side:$('sSide').value,fit:$('sFit').checked,rec:$('sRec').checked,agents:$('sAgents').checked});
+  $('ask').checked=$('sAsk').checked;$('key').value='';$('settings').classList.remove('on')};
+$('bRec').onclick=function(){post({type:'record'})};
+$('bDesk').onclick=function(){post({type:'claudeDesktop'});$('settings').classList.remove('on')};
+$('bMin').onclick=function(){post({type:'minimize'})};
+
+/* ---------- messages from the program ---------- */
+function onMsg(m){
+  switch(m.type){
+    case 'init':
+      models=m.models;provider=m.provider;lastModels=m.chosen||{};drawSeg();loadModels();drawModelPicker();
+      $('sAsk').checked=$('ask').checked=!!m.ask;$('sDock').checked=!!m.dock;$('sSide').value=m.side;$('sFit').checked=!!m.fit;$('sRec').checked=!!m.rec;$('sAgents').checked=!!m.agents;$('agent').parentNode.style.display=m.agents?'':'none';if(m.ver)$('ver').textContent='SteelMate AI version '+m.ver;$('bRec').style.display=m.rec?'':'none';$('sDock').onchange.call($('sDock'));
+      $('keyhelp').textContent=m.hasKey?'A key is saved for this vendor. Leave blank to keep it.':'No key saved for this vendor yet.';
+      if(!m.hasKey)$('settings').classList.add('on');
+      break;
+    case 'status':
+      $('stat').textContent=m.text;$('dot').className='dot '+(m.state||'');break;
+    case 'busy':setBusy(!!m.value);break;
+    case 'append':add(m.kind,m.text);break;
+    case 'approval':approval(m);break;
+    case 'clear':clearMsgs();break;
+    case 'welcome':welcome();break;
+    case 'replay':clearMsgs();m.lines.forEach(function(l){add(l.kind,l.text,true)});add('n','— earlier chat above; new messages continue below —');tab('chat');break;
+    case 'tools':tools=m.list;drawTools();break;
+    case 'agents':drawAgents(m);break;
+    case 'history':hist=m.list;drawHist();break;
+    case 'historyOne':
+      document.querySelectorAll('.hi').forEach(function(d){if(d._id===m.id)d.querySelector('.tr').textContent=m.text});break;
+    case 'tab':tab(m.name);break;
+  }
+}
+if(window.chrome&&window.chrome.webview){window.chrome.webview.addEventListener('message',function(e){onMsg(typeof e.data==='string'?JSON.parse(e.data):e.data)});post({type:'ready'})}
+window.__tekla={onMsg:onMsg,post:post};
+})();
+</script>
+</body></html>

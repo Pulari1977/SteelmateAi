@@ -197,9 +197,9 @@ public abstract class Provider
 		if (ex is HttpRequestException || low.Contains("could not be resolved") || low.Contains("unable to connect") || low.Contains("ssl") || low.Contains("tls") || low.Contains("proxy"))
 			return "Cannot reach " + provider + " over the internet. A firewall, VPN, proxy or antivirus may be blocking it.\nDetails: " + Inner(ex);
 		if (low.Contains("api error 401") || low.Contains("invalid x-api-key") || low.Contains("authentication") || low.Contains("api key not valid") || low.Contains("incorrect api key"))
-			return provider + " rejected the API key. Paste the key again in Settings (no spaces or quotes), then press Save and reconnect.\nDetails: " + raw;
+			return provider + " rejected the API key. Paste the key again in Settings (no spaces or quotes), then press Save and reconnect." + (provider == "Claude" ? " Note: a Claude Pro/Max plan is not an API key. To use your plan, press Settings > Connect to Claude Desktop." : "") + "\nDetails: " + raw;
 		if (low.Contains("credit balance") || low.Contains("billing") || low.Contains("quota") || low.Contains("insufficient"))
-			return "The " + provider + " account has no credit or hit its limit. Add credit in your " + provider + " account, then try again.\nDetails: " + raw;
+			return "The " + provider + " account has no credit or hit its limit. Add credit in your " + provider + " account, then try again." + (provider == "Claude" ? " (API credit is separate from a Claude Pro/Max plan. To use your plan instead, press Settings > Connect to Claude Desktop.)" : "") + "\nDetails: " + raw;
 		if (low.Contains("api error 404") || (low.Contains("model") && (low.Contains("not found") || low.Contains("not_found") || low.Contains("does not exist"))))
 			return "The model name is not accepted by " + provider + ". Pick another model in the list at the bottom of the chat.\nDetails: " + raw;
 		if (low.Contains("api error 403"))

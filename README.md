@@ -2,11 +2,11 @@
 
 A chat window for Tekla Structures. You type what you want, and Claude does it in Tekla using about 58 tools: create and modify parts, check numbering, find clashes, make drawings, and export NC, IFC and reports. It asks before it changes your model.
 
-## Latest version: 1.9.1 (2026-11-07)
+## Latest version: 1.9.2 (2026-11-07)
 
 Works with **Tekla Structures 2025 and 2026**. It uses whichever Tekla is running.
 
-**Download:** [releases/1.9.1/SteelMateAI-Setup-1.9.1.exe](releases/1.9.1/SteelMateAI-Setup-1.9.1.exe). Click the file, then **Download raw file**.
+**Download:** [releases/1.9.2/SteelMateAI-Setup-1.9.2.exe](releases/1.9.2/SteelMateAI-Setup-1.9.2.exe). Click the file, then **Download raw file**.
 
 What changed in each version: [CHANGELOG.txt](CHANGELOG.txt)
 

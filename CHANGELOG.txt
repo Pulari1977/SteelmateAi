@@ -1,6 +1,11 @@
 SteelMate AI - version history
 ==============================
 
+1.9.2  (2026-11-07)
+- Tekla tool server starts more reliably: tools are registered one class at a time, so one
+  bad class (or one bad tool DLL of yours) no longer stops all Tekla tools.
+- If the tool server cannot start, the full reason is written to mcp.log and shown in the chat.
+
 1.9.1  (2026-11-07)
 - Finds Tekla installed in C:\TeklaStructures\<version> (no space) even when Tekla is closed.
 - Much more detail in mcp.log: every Tekla call, the connection attempt, and full errors.

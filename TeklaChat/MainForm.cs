@@ -579,7 +579,8 @@ public class MainForm : Form
 				text = Status(null, "not connected", false),
 				state = StatusState()
 			});
-			Add("e", "Could not start the Tekla MCP server: " + ex.Message);
+			TeklaMcp.TeklaSession.Log("Could not start the tool server: " + ex);
+			Add("e", "Could not start the Tekla tool server: " + ex.Message + (ex.InnerException != null ? " (" + ex.InnerException.Message + ")" : "") + "\nDetails are in %LOCALAPPDATA%\\SteelMateAI\\mcp.log. Press Reconnect on the Tools tab to try again.");
 		}
 	}
 

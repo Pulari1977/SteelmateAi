@@ -24,7 +24,9 @@ public class McpHost
 		{
 			Name = "tekla",
 			Command = exePath,
-			Arguments = new string[1] { "--mcp" }
+			Arguments = new string[1] { "--mcp" },
+			WorkingDirectory = System.IO.Path.GetDirectoryName(exePath),
+			StandardErrorLines = line => TeklaMcp.TeklaSession.Log("tool server says: " + line)
 		};
 		_client = await McpClient.CreateAsync(new StdioClientTransport(stdioClientTransportOptions));
 		Tools = (await _client.ListToolsAsync()).Select((McpClientTool t) => new ToolDef

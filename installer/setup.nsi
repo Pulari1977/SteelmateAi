@@ -1,7 +1,7 @@
 ; SteelMate AI installer. Per-user install: no admin rights needed.
 Unicode true
 !define APP "SteelMate AI"
-!define VER "1.9.1"
+!define VER "1.9.2"
 !define EXE "SteelMateAI.exe"
 !define UNKEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\SteelMateAI"
 
